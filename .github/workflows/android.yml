@@ -21,38 +21,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Auto-Detect Project Root & Setup Gradle Wrapper
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate Wrapper if missing
         run: |
-          # 1. प्रोजेक्ट फ़ोल्डर ढूँढें (जहाँ settings.gradle या build.gradle हो)
-          PROJ_DIR=$(find . -maxdepth 3 -name "settings.gradle*" -o -name "build.gradle*" | head -n 1 | xargs -r dirname)
-
-          if [ -z "$PROJ_DIR" ]; then
-            echo "Error: No Android project found!"
-            exit 1
+          if [ -d "SocialChat" ]; then
+            cd SocialChat
           fi
-
-          echo "Project directory found at: $PROJ_DIR"
-          echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
-
-          cd "$PROJ_DIR"
-
-          # 2. अगर gradlew नहीं है तो खुद बनाएँ
           if [ ! -f "gradlew" ]; then
-            echo "gradlew not found. Generating wrapper automatically..."
             gradle wrapper
           fi
-
-          # 3. Execution permissions दें
           chmod +x gradlew
 
       - name: Build APK
         run: |
-          cd "$PROJ_DIR"
-          ./gradlew assembleDebug --stacktrace
+          if [ -d "SocialChat" ]; then
+            cd SocialChat
+          fi
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Locate and Upload APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: '**/build/outputs/apk/debug/*.apk'
-          
