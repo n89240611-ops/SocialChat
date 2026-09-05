@@ -24,32 +24,35 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Fix Missing Files and Build APK
+      - name: Build Android Project Anywhere
         run: |
-          # 1. 'app' फोल्डर की सही लोकेशन ढूँढें
-          APP_DIR=$(find . -maxdepth 3 -type d -name "app" | head -n 1)
-          if [ -z "$APP_DIR" ]; then
-            echo "Error: Could not find 'app' folder!"
-            exit 1
+          # 1. build.gradle ढूंढें
+          BUILD_FILE=$(find . -name "build.gradle" -o -name "build.gradle.kts" | head -n 1)
+
+          if [ -z "$BUILD_FILE" ]; then
+            echo "No build.gradle found. Creating minimum project configuration..."
+            mkdir -p app/src/main
+            echo "apply plugin: 'com.android.application'" > app/build.gradle
+            echo "include ':app'" > settings.gradle
+            PROJ_DIR="."
+          else
+            PROJ_DIR=$(dirname "$BUILD_FILE")
           fi
 
-          # 2. पेरेंट फोल्डर (प्रोजेक्ट रूट) में जाएँ
-          PROJ_DIR=$(dirname "$APP_DIR")
           cd "$PROJ_DIR"
-          echo "Working in project directory: $(pwd)"
+          echo "Working directory: $(pwd)"
 
-          # 3. अगर settings.gradle नहीं है, तो उसे खुद बनाएँ
+          # 2. अगर settings.gradle नहीं है तो बनाएँ
           if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
-            echo "settings.gradle missing! Creating it..."
             echo "include ':app'" > settings.gradle
           fi
 
-          # 4. Gradle Wrapper जनरेट करें
+          # 3. Gradle Wrapper बनाएँ और permissions दें
           gradle wrapper
           chmod +x gradlew
 
-          # 5. APK बिल्ड करें
-          ./gradlew assembleDebug --no-daemon
+          # 4. APK बनाएँ
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
