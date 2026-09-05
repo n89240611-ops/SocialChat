@@ -24,18 +24,31 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Generate Wrapper and Build
+      - name: Fix Missing Files and Build APK
         run: |
-          # असली एंड्रॉइड प्रोजेक्ट फ़ोल्डर ढूँढें (जहाँ settings.gradle मौजूद हो)
-          TARGET_DIR=$(find . -name "settings.gradle*" -exec dirname {} \;)
-          echo "Target Directory: $TARGET_DIR"
-          cd "$TARGET_DIR"
+          # 1. 'app' फोल्डर की सही लोकेशन ढूँढें
+          APP_DIR=$(find . -maxdepth 3 -type d -name "app" | head -n 1)
+          if [ -z "$APP_DIR" ]; then
+            echo "Error: Could not find 'app' folder!"
+            exit 1
+          fi
 
-          # Wrapper बनाएँ
+          # 2. पेरेंट फोल्डर (प्रोजेक्ट रूट) में जाएँ
+          PROJ_DIR=$(dirname "$APP_DIR")
+          cd "$PROJ_DIR"
+          echo "Working in project directory: $(pwd)"
+
+          # 3. अगर settings.gradle नहीं है, तो उसे खुद बनाएँ
+          if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
+            echo "settings.gradle missing! Creating it..."
+            echo "include ':app'" > settings.gradle
+          fi
+
+          # 4. Gradle Wrapper जनरेट करें
           gradle wrapper
           chmod +x gradlew
 
-          # APK बनाएँ
+          # 5. APK बिल्ड करें
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
@@ -43,4 +56,3 @@ jobs:
         with:
           name: app-debug
           path: '**/build/outputs/apk/debug/*.apk'
-          
