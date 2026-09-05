@@ -1,15 +1,6 @@
-# Social Chat — Step 7
-Ads + Premium monetization structure.
+# Social Chat — Mobile Build Fixed
 
-Included:
-- Ad placement contracts
-- Premium plans and subscription states
-- Free/Premium feature gating
-- Monetization setup guide
+This is a minimal valid Android Gradle project designed to build from GitHub Actions without a PC.
+It uses a root `app` module and a workflow that runs `gradle :app:assembleDebug`.
 
-Important:
-This is the integration-ready source structure. Real ads require an AdMob account/app/ad-unit IDs.
-Real subscriptions require a Google Play Console app and subscription product IDs.
-Revenue is not guaranteed and is subject to platform fees, ad demand, policies, taxes, and user activity.
-
-Next: Step 8 — Admin, security checks, release preparation.
+This package is a buildable starter app. Firebase, AdMob and Google Play Billing still require their own project/account configuration before production use.
