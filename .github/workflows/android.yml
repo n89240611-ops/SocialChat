@@ -24,21 +24,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Generate Wrapper if missing
+      - name: Generate Wrapper and Build
         run: |
-          if [ -d "SocialChat" ]; then
-            cd SocialChat
-          fi
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper
-          fi
+          # असली एंड्रॉइड प्रोजेक्ट फ़ोल्डर ढूँढें (जहाँ settings.gradle मौजूद हो)
+          TARGET_DIR=$(find . -name "settings.gradle*" -exec dirname {} \;)
+          echo "Target Directory: $TARGET_DIR"
+          cd "$TARGET_DIR"
+
+          # Wrapper बनाएँ
+          gradle wrapper
           chmod +x gradlew
 
-      - name: Build APK
-        run: |
-          if [ -d "SocialChat" ]; then
-            cd SocialChat
-          fi
+          # APK बनाएँ
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
@@ -46,3 +43,4 @@ jobs:
         with:
           name: app-debug
           path: '**/build/outputs/apk/debug/*.apk'
+          
